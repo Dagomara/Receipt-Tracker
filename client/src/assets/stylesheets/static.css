@@ -1,0 +1,97 @@
+.static-navbar {
+  background-color:var(--squadup-transparent-slate-blue);
+}
+
+.static-navbar img {
+  max-height: 80px;
+}
+
+#loginBox .static-container-fluid {
+  width: 520px;
+}
+
+#loginBox .static-container-fluid {
+  background-color: var(#936199);
+  border-radius: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  color: white;
+}
+
+.static-body {
+  --squadup-purple: #521658;
+  --squadup-lightpurple: #ff76c1;
+  --squadup-discpurple: #3d0f68;
+  --squadup-transparent-slate-blue: #06080ac2;
+  --clear: rgba(0, 0, 0, 0);
+}
+
+.static-html, .static-body {
+  background-image: url("../../assets/img/steve-johnson-kWUbY4ozhaI-unsplash.jpg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-color: #25da3a;
+  margin-top:0px;
+  margin-bottom:0px;
+  padding-top:1px;
+  padding-bottom:1px;
+  background-color: var(--squadup-purple);
+  min-height: 100vh;
+  max-height: 100%;
+}
+
+#loginPane .static-container-fluid {
+  background-color: var(--squadup-transparent-slate-blue);
+  border-radius: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+@media (min-width: 800px) {
+  #loginPane .static-container-fluid {
+    width: 650px;
+  }
+}
+
+.static-container-fluid {
+  background-color: var(--squadup-transparent-slate-blue);
+  border-radius: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .static-container-fluid {
+    width: 520px;
+  }
+}
+
+#loginPane {
+  color: white;
+}
+
+.btn-static {
+  background-color: #4262be;
+  border-color: #4262be;
+}
+
+.btn-static:hover {
+  background-color: var(--squadup-discpurple);
+  border-color: var(--squadup-discpurple);
+}
+
+.nav-link-static {
+  background-color: var(--clear) !important;
+}
+
+.nav-item-static {
+  background-color: var(--clear) !important;
+  margin-left:0px !important;
+  margin-top:0px !important;
+  width:auto !important;
+}
+
+.active-static {
+  font-weight: bold !important;
+}
