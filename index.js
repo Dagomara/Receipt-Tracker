@@ -14,6 +14,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const database = require('./db/connect');
 
+const jwt = require('jsonwebtoken');
+
 
 const corsOptions = {
     methods: 'GET,POST,PATCH,DELETE,OPTIONS',

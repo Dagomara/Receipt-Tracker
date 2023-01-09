@@ -29,6 +29,7 @@ const companySchema = new mongoose.Schema({
 });
 
 const UserSchema = new mongoose.Schema({
+	username: {type: String, required: true},
 	name: {type: String, required: true},
 	companies: [companySchema]
 }, { collection: 'Users' });
