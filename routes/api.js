@@ -82,7 +82,7 @@ router.put('/addCompany', cors(corsOptionsDelegate), async (req, res, next) => {
   let {companyName} = req.body;
 
   let newCompany = await Company.create({
-    name: companyName, items: [], receipts: [], stats: {}
+    name: companyName, stats: {}
   })
   .catch((err) => {
     console.log("addCompany creation error!");
@@ -163,34 +163,141 @@ router.get('/getStats', cors(corsOptionsDelegate), async (req, res, next) => {
 
 //getReceipt
 router.get('/getReceipts', cors(corsOptionsDelegate), async (req, res, next) => {
-  res.status(200).json({dummyText: true});
+  // in: JWT, companyID
+  // out: [Receipt]
+  let {companyID} = req.body;
+
+  const pipeline = [
+    {
+      $match: {
+        company: companyID // Only include receipts from selected company
+      }
+    }
+  ];
+  
+  // Finally, we execute the aggregation pipeline and process the results
+  await Receipt.aggregate(pipeline).toArray((error, result) => {
+    if (error) {
+      console.error(error);
+    } else {
+      console.log(result);
+    }
+  });
+
+  // code below is guffed up and copied from above api calls
+  await Company.findById(companyID, "name stats").exec()
+  .then((comp, err) => {
+    console.log(comp, err);
+    if (!err) {
+      res.status(200).json({name: comp.name, stats: comp.stats});
+    }
+  }).catch((err) => {
+    console.log("getStats: error for ", id, ": ", err);
+    res.status(400).json({"error": err});
+  })
 });
 
 router.get('/addReceipt', cors(corsOptionsDelegate), async (req, res, next) => {
-  // in: JWT, companyID, receipt, newItems
+  // in: JWT, newReceipt, newItems
   // out: success? 
-  let {companyID, receipt, newItems} = req.body;
+  let {newReceipt, newItems} = req.body;
+  let companyID = newReceipt.company;
 
-  Company.findByIdAndUpdate(companyID, {$push: { receipts: newReceipt },
-                                        $set: { items: newItems }}).exec()
-  .then((results, err) => {
-    console.log("results: ", results);
-    console.log("err: ", err);
-    if (!err) {
-      res.status(200).json({success: true});
-    }
-  }).catch((err) => {
-    res.status(400).json({error: err, success: false});
+  // TODO: before adding newItems, update pricesSeen for old items. 
+
+  // add newItems from receipt
+  await newItems.forEach(async (item, i) => {
+    // item_id, count, ppc -> Receipt.items
+    // company, name, pricesSeen: [{date, ppc}] -> new Item
+
+    let newItem = await Item.create({
+      company: companyID,
+      name: item.name,
+      pricesSeen: [{
+        date: newReceipt.date,
+        ppc: item.ppc
+      }]
+    }).catch((err) => {
+      console.log("addReceipt: error adding item! Item: ", item);
+      res.status(400).json({"error": err, "success": false});
+    });
+
+    // populate IDs to newReceipt's items
+    newReceipt.items.push({item: newItem._id, count: item.count, ppc: item.ppc});
+    console.log("addReceipt: Item added successfully: ", newReceipt, newItem);
+    // TODO: editing receipt will change pricesSeen properly, deleting old value.
   });
-  
+
+  // make new receipt!
+  await Receipt.create({
+    date: newReceipt.date, 
+    subtotal: newReceipt.subtotal,
+    tips: newReceipt.tips,
+    tax: newReceipt.tax,
+    total: newReceipt.total,
+    items: newReceipt.items
+  }).catch((err) => {
+    console.log("addReceipt: error adding Receipt! Receipt: ", newReceipt);
+    console.log("Error: ", err);
+    res.status(400).json({"error": err, "success": false});
+  });
+
+  res.status(200).json({success: true});
 });
 
 router.get('/deleteReceipt', cors(corsOptionsDelegate), async (req, res, next) => {
+  // in: JWT, receiptID
+  // out: success? 
+  let {receiptID} = req.body;
+
   res.status(200).json({dummyText: true});
 });
 
 router.get('/editReceipt', cors(corsOptionsDelegate), async (req, res, next) => {
-  res.status(200).json({dummyText: true});
+  // in: JWT, receiptID, newReceipt, newItems
+  // out: success? 
+  let {receiptID, newReceipt, newItems} = req.body;
+  let companyID = newReceipt.company;
+
+  // add newItems from receipt
+  await newItems.forEach(async (item, i) => {
+    // item_id, count, ppc -> Receipt.items
+    // company, name, pricesSeen: [{date, ppc}] -> new Item
+
+    let newItem = await Item.create({
+      company: companyID,
+      name: item.name,
+      pricesSeen: [{
+        date: newReceipt.date,
+        ppc: item.ppc
+      }]
+    }).catch((err) => {
+      console.log("editReceipt: error adding item! Item: ", item);
+      res.status(400).json({"error": err, "success": false});
+    });
+
+    // populate IDs to newReceipt's items
+    newReceipt.items.push({item: newItem._id, count: item.count, ppc: item.ppc});
+    console.log("editReceipt: Item added successfully: ", newReceipt, newItem);
+    // TODO: editing receipt will change pricesSeen properly, deleting old value.
+  });
+
+  // update receipt with newReceipt's informations
+  await Receipt.findByIdAndUpdate(receiptID, {
+    date: newReceipt.date, 
+    subtotal: newReceipt.subtotal,
+    tips: newReceipt.tips,
+    tax: newReceipt.tax,
+    total: newReceipt.total,
+    items: newReceipt.items
+  }).exec()
+  .catch((err) => {
+    console.log("editReceipt: error editing ", id, "with newReceipt: ", newReceipt);
+    console.log("Error encountered: ", err);
+    res.status(400).json({"error": err, "success": false});
+  });
+
+  res.status(200).json({success: true});
 });
 
 //getItem
